@@ -190,8 +190,8 @@ class BodyEditorLoader(
         )
 
         private fun JsonValue.readOrigin():Vector2 = vector2(
-            x = this["x"].asFloat(),
-            y = this["y"].asFloat(),
+            x = get("x").asFloat(),
+            y = get("y").asFloat(),
         )
 
         private fun JsonValue.readPolygon():PolygonModel
@@ -204,16 +204,16 @@ class BodyEditorLoader(
         }
 
         private fun JsonValue.readVertex():Vector2 = vector2(
-            x = this["x"].asFloat(),
-            y = this["y"].asFloat(),
+            x = get("x").asFloat(),
+            y = get("y").asFloat(),
         )
 
         private fun JsonValue.readCircle():CircleModel = CircleModel(
             center = vector2(
-                x = this["cx"].asFloat(),
-                y = this["cy"].asFloat(),
+                x = get("cx").asFloat(),
+                y = get("cy").asFloat(),
             ),
-            radius = this["r"].asFloat(),
+            radius = get("r").asFloat(),
         )
 
         private fun vector2(x:Float,y:Float):Vector2 = Vector2(x,y)
