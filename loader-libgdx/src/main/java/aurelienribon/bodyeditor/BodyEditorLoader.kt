@@ -1,55 +1,65 @@
-package aurelienribon.bodyeditor;
+package aurelienribon.bodyeditor
 
-import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.utils.JsonReader;
-import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.files.FileHandle
+import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.physics.box2d.Body
+import com.badlogic.gdx.physics.box2d.CircleShape
+import com.badlogic.gdx.physics.box2d.FixtureDef
+import com.badlogic.gdx.physics.box2d.PolygonShape
+import com.badlogic.gdx.utils.JsonReader
+import com.badlogic.gdx.utils.JsonValue
+import kotlin.collections.get
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+class VectorPool
+{
+    private val pool:MutableList<Vector2> = ArrayList()
+
+    fun newVec():Vector2?
+    {
+        return if (pool.isEmpty()) Vector2() else pool.removeAt(pool.size-1)
+    }
+
+    fun free(vec:Vector2?)
+    {
+        if (vec != null) pool.add(vec)
+    }
+}
 
 /**
  * Loads the collision fixtures defined with the Physics Body Editor application.
  * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
  */
-public class BodyEditorLoader {
+class BodyEditorLoader(
+    val model:Model,
+)
+{
+
     // Reusable stuff
-    private final Model model;
-    private final List<Vector2> vectorPool = new ArrayList<Vector2>();
-    private final PolygonShape polygonShape = new PolygonShape();
-    private final CircleShape circleShape = new CircleShape();
-    private final Vector2 vec = new Vector2();
+    private val vectorPool = VectorPool()
+    private val vec = Vector2()
+    private val polygonShape = PolygonShape()
+    private val circleShape = CircleShape()
 
-    public BodyEditorLoader(FileHandle file) {
-        if (file == null) throw new NullPointerException("file is null");
-        model = readJson(file.readString());
-    }
+    constructor(file:FileHandle):this(readJson(file.readString()))
 
-    public BodyEditorLoader(String str) {
-        if (str == null) throw new NullPointerException("str is null");
-        model = readJson(str);
-    }
+    constructor(str:String):this(readJson(str))
 
     /**
      * Creates and applies the fixtures defined in the editor. The name
      * parameter is used to retrieve the right fixture from the loaded file.
-     * <br/><br/>
-     * <p>
+     * <br></br><br></br>
+     *
+     *
      * The body reference point (the red cross in the tool) is by default
      * located at the bottom left corner of the image. This reference point
      * will be put right over the BodyDef position point. Therefore, you should
      * place this reference point carefully to let you place your body in your
      * world easily with its BodyDef.position point. Note that to draw an image
      * at the position of your body, you will need to know this reference point
-     * (see {@link #getOrigin(java.lang.String, float)}.
-     * <br/><br/>
-     * <p>
+     * (see [.getOrigin].
+     * <br></br><br></br>
+     *
+     *
      * Also, saved shapes are normalized. As shown in the tool, the width of
      * the image is considered to be always 1 meter. Thus, you need to provide
      * a scale factor so the polygons get resized according to your needs (not
@@ -60,55 +70,77 @@ public class BodyEditorLoader {
      * @param fd    The fixture parameters to apply to the created body fixture.
      * @param scale The desired scale of the body. The default width is 1.
      */
-    public void attachFixture(Body body, String name, FixtureDef fd, float scale) {
-        RigidBodyModel rbModel = model.rigidBodies.get(name);
-        if (rbModel == null) throw new RuntimeException("Name '" + name + "' was not found.");
+    fun attachFixture(
+        body:Body,
+        name:String?,
+        fd:FixtureDef,
+        scale:Float,
+    ) = synchronized(vectorPool)
+    {
+        val rbModel:RigidBodyModel = getRigidBody(name)
 
         // TODO: Verify correct, updated method from mul to scl
-        Vector2 origin = vec.set(rbModel.origin).scl(scale);
+        val origin = vec.set(rbModel.origin).scl(scale)
 
+        run {
+            var i = 0
+            val n = rbModel.polygons.size
+            while (i < n)
+            {
+                val polygon = rbModel.polygons[i]
+                val vertices = polygon.buffer
 
-        for (int i = 0, n = rbModel.polygons.size(); i < n; i++) {
-            PolygonModel polygon = rbModel.polygons.get(i);
-            Vector2[] vertices = polygon.buffer;
+                run {
+                    var ii = 0
+                    val nn = vertices.size
+                    while (ii < nn)
+                    {
+                        vertices[ii] = vectorPool.newVec()!!.set(polygon.vertices.get(ii)).scl(scale)
+                        vertices[ii]!!.sub(origin)
+                        ii++
+                    }
+                }
 
-            for (int ii = 0, nn = vertices.length; ii < nn; ii++) {
-                vertices[ii] = newVec().set(polygon.vertices.get(ii)).scl(scale);
-                vertices[ii].sub(origin);
-            }
+                polygonShape.set(vertices)
+                fd.shape = polygonShape
+                body.createFixture(fd)
 
-            polygonShape.set(vertices);
-            fd.shape = polygonShape;
-            body.createFixture(fd);
-
-            for (int ii = 0, nn = vertices.length; ii < nn; ii++) {
-                free(vertices[ii]);
+                var ii = 0
+                val nn = vertices.size
+                while (ii < nn)
+                {
+                    vectorPool.free(vertices[ii])
+                    ii++
+                }
+                i++
             }
         }
 
-        for (int i = 0, n = rbModel.circles.size(); i < n; i++) {
-            CircleModel circle = rbModel.circles.get(i);
-            Vector2 center = newVec().set(circle.center).scl(scale);
-            float radius = circle.radius * scale;
+        var i = 0
+        val n = rbModel.circles.size
+        while (i < n)
+        {
+            val circle = rbModel.circles.get(i)
+            val center = vectorPool.newVec()!!.set(circle.center).scl(scale)
+            val radius = circle.radius*scale
 
-            circleShape.setPosition(center);
-            circleShape.setRadius(radius);
-            fd.shape = circleShape;
-            body.createFixture(fd);
+            circleShape.position = center
+            circleShape.radius = radius
+            fd.shape = circleShape
+            body.createFixture(fd)
 
-            free(center);
+            vectorPool.free(center)
+            i++
         }
     }
+
+    fun getRigidBody(name:String?):RigidBodyModel =
+        model.rigidBodies[name] ?: error("Name '$name' was not found.")
 
     /**
      * Gets the image path attached to the given name.
      */
-    public String getImagePath(String name) {
-        RigidBodyModel rbModel = model.rigidBodies.get(name);
-        if (rbModel == null) throw new RuntimeException("Name '" + name + "' was not found.");
-
-        return rbModel.imagePath;
-    }
+    fun getImagePath(name:String):String = getRigidBody(name).imagePath
 
     /**
      * Gets the origin point attached to the given name. Since the point is
@@ -116,103 +148,83 @@ public class BodyEditorLoader {
      * size. Warning: this method returns the same Vector2 object each time, so
      * copy it if you need it for later use.
      */
-    public Vector2 getOrigin(String name, float scale) {
-        RigidBodyModel rbModel = model.rigidBodies.get(name);
-        if (rbModel == null) throw new RuntimeException("Name '" + name + "' was not found.");
+    fun getOrigin(name:String,scale:Float):Vector2 = vec.set(getRigidBody(name).origin).scl(scale)
 
-        return vec.set(rbModel.origin).scl(scale);
-    }
+    data class Model(
+        val rigidBodies:Map<String,RigidBodyModel>,
+    )
 
-    /**
-     * <b>For advanced users only.</b> Lets you access the internal model of
-     * this loader and modify it. Be aware that any modification is permanent
-     * and that you should really know what you are doing.
-     */
-    public Model getInternalModel() {
-        return model;
-    }
+    class RigidBodyModel(
+        val name:String,
+        val imagePath:String,
+        val origin:Vector2,
+        val polygons:List<PolygonModel>,
+        val circles:List<CircleModel>,
+    )
 
-    public static class Model {
-        public final Map<String, RigidBodyModel> rigidBodies = new HashMap<String, RigidBodyModel>();
-    }
+    class PolygonModel(
+        val vertices:List<Vector2?>,
+        val buffer:Array<Vector2?>, // used to avoid allocation in attachFixture()
+    )
 
-    public static class RigidBodyModel {
-        public String name;
-        public String imagePath;
-        public final Vector2 origin = new Vector2();
-        public final List<PolygonModel> polygons = new ArrayList<PolygonModel>();
-        public final List<CircleModel> circles = new ArrayList<CircleModel>();
-    }
+    class CircleModel(
+        val center:Vector2,
+        val radius:Float,
+    )
 
-    public static class PolygonModel {
-        public final List<Vector2> vertices = new ArrayList<Vector2>();
-        private Vector2[] buffer; // used to avoid allocation in attachFixture()
-    }
+    companion object
+    {
+        private fun readJson(str:String):Model = Model(
+            rigidBodies = JsonReader().parse(str).getChild("rigidBodies").associate { rbJson ->
+                val rbModel = readRigidBody(rbJson)
+                rbModel.name to rbModel
+            },
+        )
 
-    public static class CircleModel {
-        public final Vector2 center = new Vector2();
-        public float radius;
-    }
+        private fun readRigidBody(rbJson:JsonValue):RigidBodyModel
+        {
 
-    private Model readJson(String str) {
-        Model model = new Model();
+            // Polygons
+            val rbModelPolygons = rbJson.get("polygons").map { polygonJson ->
+                val polygonModelVertices = polygonJson.map { vertexJson ->
+                    val x = vertexJson.get("x").asFloat()
+                    val y = vertexJson.get("y").asFloat()
+                    Vector2(x,y)
+                }
 
-        JsonValue map = new JsonReader().parse(str);
-
-        for (JsonValue rbJson = map.getChild("rigidBodies"); rbJson != null; rbJson = rbJson.next()) {
-            RigidBodyModel rbModel = readRigidBody(rbJson);
-            model.rigidBodies.put(rbModel.name, rbModel);
-        }
-
-        return model;
-    }
-
-    private RigidBodyModel readRigidBody(JsonValue rbJson) {
-        RigidBodyModel rbModel = new RigidBodyModel();
-        rbModel.name = rbJson.get("name").asString();
-        rbModel.imagePath = rbJson.get("imagePath").asString();
-
-        JsonValue newOriginElem = rbJson.get("origin");
-        rbModel.origin.x = newOriginElem.get("x").asFloat();
-        rbModel.origin.y = newOriginElem.get("y").asFloat();
-
-        // Polygons
-        JsonValue polygonsJson = rbJson.get("polygons");
-        for (JsonValue polygonJson = polygonsJson.child(); polygonJson != null; polygonJson = polygonJson.next()) { // Can I use next instead of next() ?
-            PolygonModel polygonModel = new PolygonModel();
-            rbModel.polygons.add(polygonModel);
-
-            for (JsonValue vertexJson = polygonJson.child(); vertexJson != null; vertexJson = vertexJson.next()) {
-                float x = vertexJson.get("x").asFloat();
-                float y = vertexJson.get("y").asFloat();
-                polygonModel.vertices.add(new Vector2(x, y));
+                PolygonModel(
+                    vertices = polygonModelVertices,
+                    buffer = arrayOfNulls(polygonModelVertices.size),
+                )
             }
 
-            // Why do we need this? Investigate.
-            polygonModel.buffer = new Vector2[polygonModel.vertices.size()];
+            // Circles
+            val rbModelCircles = rbJson.get("circles").map { circleJson ->
+                val circleModelCenterX = circleJson.get("cx").asFloat()
+                val circleModelCenterY = circleJson.get("cy").asFloat()
+                val circleModelRadius = circleJson.get("r").asFloat()
+                val circleModel = CircleModel(
+                    center = Vector2(circleModelCenterX,circleModelCenterY),
+                    radius = circleModelRadius,
+                )
+                circleModel
+            }
+
+            return RigidBodyModel(
+                name = rbJson.get("name").asString(),
+                imagePath = rbJson.get("imagePath").asString(),
+                origin = parseOriginOfRigidBody(rbJson),
+                polygons = rbModelPolygons,
+                circles = rbModelCircles,
+            )
         }
 
-        // Circles
-        JsonValue circlesJson = rbJson.get("circles");
-        for (JsonValue circleJson = circlesJson.child(); circleJson != null; circleJson = circleJson.next()) { // Can I use next instead of next() ?
-            CircleModel circleModel = new CircleModel();
-            rbModel.circles.add(circleModel);
-
-            circleModel.center.x = circleJson.get("cx").asFloat();
-            circleModel.center.y = circleJson.get("cy").asFloat();
-            circleModel.radius = circleJson.get("r").asFloat();
+        private fun parseOriginOfRigidBody(rbJson:JsonValue):Vector2
+        {
+            val originJsonObject = rbJson.get("origin")
+            val originX = originJsonObject.get("x").asFloat()
+            val originY = originJsonObject.get("y").asFloat()
+            return Vector2(originX,originY)
         }
-
-        // Why are shapes not loaded? Investigate.
-
-        return rbModel;
-    }
-
-    private Vector2 newVec() {
-        return vectorPool.isEmpty() ? new Vector2() : vectorPool.remove(0);
-    }
-
-    private void free(Vector2 v) {
-        vectorPool.add(v);
     }
 }
