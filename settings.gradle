@@ -12,4 +12,8 @@ dependencyResolutionManagement {
     }
 }
 
-include 'editor', 'loader-libgdx', 'loader-libgdx-demo'
+include 'editor'
+include 'loader-libgdx-common'
+include 'loader-libgdx-box2d-v1.12.1'
+//include 'loader-libgdx-box2d-v3.1.1'
+include 'loader-libgdx-demo'

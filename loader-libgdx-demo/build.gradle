@@ -12,7 +12,7 @@ dependencies {
 
     implementation files('./libs/tween-engine-api.jar')
 
-    implementation project(':loader-libgdx')
+    implementation project(':loader-libgdx-box2d-v1.12.1')
 
 }
 
