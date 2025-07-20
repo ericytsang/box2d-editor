@@ -19,9 +19,9 @@ class VectorPool
         return if (pool.isEmpty()) Vector2() else pool.removeAt(pool.size-1)
     }
 
-    fun free(vec:Vector2?)
+    fun free(vec:Vector2)
     {
-        if (vec != null) pool.add(vec)
+        pool.add(vec)
     }
 }
 
@@ -82,54 +82,24 @@ class BodyEditorLoader(
         // TODO: Verify correct, updated method from mul to scl
         val origin = vec.set(rbModel.origin).scl(scale)
 
-        run {
-            var i = 0
-            val n = rbModel.polygons.size
-            while (i < n)
-            {
-                val polygon = rbModel.polygons[i]
-                val vertices = polygon.buffer
-
-                run {
-                    var ii = 0
-                    val nn = vertices.size
-                    while (ii < nn)
-                    {
-                        vertices[ii] = vectorPool.newVec().set(polygon.vertices[ii]).scl(scale).sub(origin)
-                        ii++
-                    }
-                }
-
-                polygonShape.set(vertices)
-                fd.shape = polygonShape
-                body.createFixture(fd)
-
-                var ii = 0
-                val nn = vertices.size
-                while (ii < nn)
-                {
-                    vectorPool.free(vertices[ii])
-                    ii++
-                }
-                i++
-            }
+        rbModel.polygons.forEach { polygon ->
+            val vertices = polygon.vertices
+                .map { vertex -> vectorPool.newVec().set(vertex).scl(scale).sub(origin) }
+                .toTypedArray()
+            polygonShape.set(vertices)
+            fd.shape = polygonShape
+            body.createFixture(fd)
+            vertices.forEach { vectorPool.free(it) }
         }
 
-        var i = 0
-        val n = rbModel.circles.size
-        while (i < n)
-        {
-            val circle = rbModel.circles[i]
+        rbModel.circles.forEach { circle ->
             val center = vectorPool.newVec().set(circle.center).scl(scale)
             val radius = circle.radius*scale
-
             circleShape.position = center
             circleShape.radius = radius
             fd.shape = circleShape
             body.createFixture(fd)
-
             vectorPool.free(center)
-            i++
         }
     }
 
@@ -162,8 +132,7 @@ class BodyEditorLoader(
     )
 
     class PolygonModel(
-        val vertices:List<Vector2?>,
-        val buffer:Array<Vector2?>, // used to avoid allocation in attachFixture()
+        val vertices:List<Vector2>,
     )
 
     class CircleModel(
@@ -192,14 +161,9 @@ class BodyEditorLoader(
             y = get("y"),
         )
 
-        private fun JsonValue.readPolygon():PolygonModel
-        {
-            val polygonModelVertices = map { it.readVertex() }
-            return PolygonModel(
-                vertices = polygonModelVertices,
-                buffer = arrayOfNulls(polygonModelVertices.size),
-            )
-        }
+        private fun JsonValue.readPolygon():PolygonModel = PolygonModel(
+            vertices = map { it.readVertex() },
+        )
 
         private fun JsonValue.readVertex():Vector2 = vector2(
             x = get("x"),
