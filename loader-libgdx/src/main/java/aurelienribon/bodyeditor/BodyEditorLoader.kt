@@ -189,38 +189,33 @@ class BodyEditorLoader(
             circles = rbJson["circles"].map { it.readCircle() },
         )
 
-        private fun JsonValue.readOrigin():Vector2
-        {
-            val originX = this["x"].asFloat()
-            val originY = this["y"].asFloat()
-            return Vector2(originX,originY)
-        }
+        private fun JsonValue.readOrigin():Vector2 = vector2(
+            x = this["x"].asFloat(),
+            y = this["y"].asFloat(),
+        )
 
         private fun JsonValue.readPolygon():PolygonModel
         {
-            val polygonModelVertices = map { it -> it.readVertex() }
+            val polygonModelVertices = map { it.readVertex() }
             return PolygonModel(
                 vertices = polygonModelVertices,
                 buffer = arrayOfNulls(polygonModelVertices.size),
             )
         }
 
-        private fun JsonValue.readVertex():Vector2
-        {
-            val x = this["x"].asFloat()
-            val y = this["y"].asFloat()
-            return Vector2(x,y)
-        }
+        private fun JsonValue.readVertex():Vector2 = vector2(
+            x = this["x"].asFloat(),
+            y = this["y"].asFloat(),
+        )
 
-        private fun JsonValue.readCircle():CircleModel
-        {
-            val centerX = this["cx"].asFloat()
-            val centerY = this["cy"].asFloat()
-            val radius = this["r"].asFloat()
-            return CircleModel(
-                center = Vector2(centerX,centerY),
-                radius = radius,
-            )
-        }
+        private fun JsonValue.readCircle():CircleModel = CircleModel(
+            center = vector2(
+                x = this["cx"].asFloat(),
+                y = this["cy"].asFloat(),
+            ),
+            radius = this["r"].asFloat(),
+        )
+
+        private fun vector2(x:Float,y:Float):Vector2 = Vector2(x,y)
     }
 }
