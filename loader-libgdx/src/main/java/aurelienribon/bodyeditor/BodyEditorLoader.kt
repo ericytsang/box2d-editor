@@ -35,6 +35,7 @@ class BodyEditorLoader(
 {
 
     // Reusable stuff
+    private val lockForReusableStuff = Any()
     private val vectorPool = VectorPool()
     private val vec = Vector2()
     private val polygonShape = PolygonShape()
@@ -75,7 +76,7 @@ class BodyEditorLoader(
         name:String?,
         fd:FixtureDef,
         scale:Float,
-    ) = synchronized(vectorPool)
+    ) = synchronized(lockForReusableStuff)
     {
         val rbModel:RigidBodyModel = getRigidBody(name)
 
@@ -114,10 +115,9 @@ class BodyEditorLoader(
     /**
      * Gets the origin point attached to the given name. Since the point is
      * normalized in [0,1] coordinates, it needs to be scaled to your body
-     * size. Warning: this method returns the same Vector2 object each time, so
-     * copy it if you need it for later use.
+     * size.
      */
-    fun getOrigin(name:String,scale:Float):Vector2 = vec.set(getRigidBody(name).origin).scl(scale)
+    fun getOrigin(name:String,scale:Float):Vector2 = getRigidBody(name).origin.cpy().scl(scale)
 
     data class ProjectModel(
         val rigidBodies:Map<String,RigidBodyModel>,
