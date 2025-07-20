@@ -13,7 +13,6 @@ dependencyResolutionManagement {
 }
 
 include 'editor'
-include 'loader-libgdx-common'
-include 'loader-libgdx-box2d-v1.12.1'
-//include 'loader-libgdx-box2d-v3.1.1'
-include 'loader-libgdx-demo'
+include 'loader-libgdx:core'
+include 'loader-libgdx:box2d-v1.12.1'
+include 'loader-libgdx:box2d-v1.12.1-demo'
