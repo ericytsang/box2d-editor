@@ -1,9 +1,0 @@
-manifest.mf
-nbbuild.xml
-build/*
-dist/*
-nbproject/*
-bin/*
-.classpath
-.project
-*.jar
