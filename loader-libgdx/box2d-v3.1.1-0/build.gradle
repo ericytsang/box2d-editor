@@ -1,0 +1,14 @@
+plugins {
+    id 'java-library'
+    id 'kotlin'
+}
+
+dependencies {
+    api "com.badlogicgames.gdx:gdx-box2d:3.1.1-0"
+
+    api project(':loader-libgdx:core')
+}
+
+jar {
+    archiveFileName = "loader-libgdx.jar"
+}
