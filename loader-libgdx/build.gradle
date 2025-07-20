@@ -15,7 +15,3 @@ dependencies {
 jar {
     archiveFileName = "loader-libgdx.jar"
 }
-
-eclipse.project {
-    name = appName + "-loader-libgdx"
-}
