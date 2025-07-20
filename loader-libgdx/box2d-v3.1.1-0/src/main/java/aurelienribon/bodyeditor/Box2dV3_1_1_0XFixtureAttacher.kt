@@ -10,7 +10,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape
  * Attaches fixtures to your Box2D version 1.12 body.
  * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
  */
-object Box2dV1_12_XFixtureAttacher
+object Box2dV3_1_1_0XFixtureAttacher
 {
     /**
      * Creates and applies the fixtures defined in the editor. The name
