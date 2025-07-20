@@ -16,10 +16,6 @@ class BodyEditorLoader(
     private val lockForReusableStuff = Any()
     private val vectorPool = VectorPool()
 
-    constructor(file:FileHandle):this(readJson(file.readString()))
-
-    constructor(str:String):this(readJson(str))
-
     fun accept(
         name:String,
         scale:Float,
@@ -98,6 +94,12 @@ class BodyEditorLoader(
 
     companion object
     {
+        @JvmStatic
+        fun fromFile(file:FileHandle):BodyEditorLoader = BodyEditorLoader(readJson(file.readString()))
+
+        @JvmStatic
+        fun fromJsonString(str:String):BodyEditorLoader = BodyEditorLoader(readJson(str))
+
         private fun readJson(str:String):ProjectModel = JsonReader().parse(str).readProject()
 
         private fun JsonValue.readProject():ProjectModel = ProjectModel(

@@ -125,7 +125,7 @@ public class App extends ApplicationAdapter {
 
     private void createBottle() {
         // 0. Create a loader for the file saved from the editor.
-        BodyEditorLoader loader = new BodyEditorLoader(Gdx.files.internal("data/test.json"));
+        BodyEditorLoader loader = BodyEditorLoader.fromFile(Gdx.files.internal("data/test.json"));
 
         // 1. Create a BodyDef, as usual.
         BodyDef bd = new BodyDef();
@@ -141,7 +141,7 @@ public class App extends ApplicationAdapter {
         bottleModel = world.createBody(bd);
 
         // 4. Create the body fixture automatically by using the loader.
-        new Box2dV1_12_XFixtureAttacher().attachFixture(loader, bottleModel, "test01", fd, BOTTLE_WIDTH);
+        Box2dV1_12_XFixtureAttacher.attachFixture(loader, bottleModel, "test01", fd, BOTTLE_WIDTH);
         bottleModelOrigin = loader.getOrigin("test01", BOTTLE_WIDTH);
     }
 

@@ -10,7 +10,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape
  * Attaches fixtures to your Box2D version 1.12 body.
  * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
  */
-class Box2dV1_12_XFixtureAttacher
+object Box2dV1_12_XFixtureAttacher
 {
     /**
      * Creates and applies the fixtures defined in the editor. The name
@@ -38,6 +38,7 @@ class Box2dV1_12_XFixtureAttacher
      * @param fd    The fixture parameters to apply to the created body fixture.
      * @param scale The desired scale of the body. The default width is 1.
      */
+    @JvmStatic
     fun attachFixture(
         loader:BodyEditorLoader,
         body:Body,
@@ -62,7 +63,7 @@ class Box2dV1_12_XFixtureAttacher
         circleShape.dispose()
     }
 
-    private inner class Visitor(
+    private class Visitor(
         private val polygonShape:PolygonShape,
         private val circleShape:CircleShape,
         private val body:Body,
