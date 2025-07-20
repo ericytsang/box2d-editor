@@ -25,8 +25,7 @@ class VectorPool
 }
 
 /**
- * Loads the collision fixtures defined with the Physics Body Editor application.
- * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
+ * Attaches fixtures to your Box2D version 1.12 body.
  */
 class Box2dV1_12_XFixtureAttacher
 {
