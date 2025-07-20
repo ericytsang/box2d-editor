@@ -104,9 +104,6 @@ class BodyEditorLoader(
         }
     }
 
-    fun getRigidBody(name:String?):RigidBodyModel =
-        model.rigidBodies[name] ?: error("Name '$name' was not found.")
-
     /**
      * Gets the image path attached to the given name.
      */
@@ -118,6 +115,9 @@ class BodyEditorLoader(
      * size.
      */
     fun getOrigin(name:String,scale:Float):Vector2 = getRigidBody(name).origin.cpy().scl(scale)
+
+    private fun getRigidBody(name:String?):RigidBodyModel =
+        model.rigidBodies[name] ?: error("Name '$name' was not found.")
 
     data class ProjectModel(
         val rigidBodies:Map<String,RigidBodyModel>,
