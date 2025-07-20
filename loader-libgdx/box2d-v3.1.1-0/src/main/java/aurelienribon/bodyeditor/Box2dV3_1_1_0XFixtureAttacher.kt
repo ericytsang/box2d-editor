@@ -1,17 +1,20 @@
 package aurelienribon.bodyeditor
 
+import com.badlogic.gdx.box2d.Box2d
+import com.badlogic.gdx.box2d.Constants.B2_MAX_POLYGON_VERTICES
+import com.badlogic.gdx.box2d.structs.b2BodyId
+import com.badlogic.gdx.box2d.structs.b2Circle
+import com.badlogic.gdx.box2d.structs.b2Hull
+import com.badlogic.gdx.box2d.structs.b2Polygon
+import com.badlogic.gdx.box2d.structs.b2ShapeDef
+import com.badlogic.gdx.box2d.structs.b2Vec2
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.physics.box2d.Body
-import com.badlogic.gdx.physics.box2d.CircleShape
-import com.badlogic.gdx.physics.box2d.FixtureDef
-import com.badlogic.gdx.physics.box2d.PolygonShape
 
 /**
- * Attaches fixtures to your Box2D version 1.12 body.
+ * Attaches fixtures to your Box2D version 3.1.1-0 body.
  * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
  */
-object Box2dV3_1_1_0XFixtureAttacher
-{
+object Box2dV3_1_1_0XFixtureAttacher {
     /**
      * Creates and applies the fixtures defined in the editor. The name
      * parameter is used to retrieve the right fixture from the loaded file.
@@ -40,49 +43,62 @@ object Box2dV3_1_1_0XFixtureAttacher
      */
     @JvmStatic
     fun attachFixture(
-        loader:BodyEditorLoader,
-        body:Body,
-        name:String,
-        fd:FixtureDef,
-        scale:Float,
-    )
-    {
-        val polygonShape = PolygonShape()
-        val circleShape = CircleShape()
+        loader: BodyEditorLoader,
+        bodyId: b2BodyId,
+        name: String,
+        shapeDef: b2ShapeDef,
+        scale: Float,
+    ) {
         loader.accept(
             name = name,
             scale = scale,
             visitor = Visitor(
-                polygonShape = polygonShape,
-                circleShape = circleShape,
-                body = body,
-                fd = fd,
+                bodyId = bodyId,
+                shapeDef = shapeDef,
             ),
         )
-        polygonShape.dispose()
-        circleShape.dispose()
     }
 
     private class Visitor(
-        private val polygonShape:PolygonShape,
-        private val circleShape:CircleShape,
-        private val body:Body,
-        private val fd:FixtureDef,
-    ):BodyEditorLoader.ShapeVisitor
-    {
-        override fun visitPolygon(vertices:List<Vector2>)
-        {
-            polygonShape.set(vertices.toTypedArray())
-            fd.shape = polygonShape
-            body.createFixture(fd)
+        private val bodyId: b2BodyId,
+        private val shapeDef: b2ShapeDef,
+    ) : BodyEditorLoader.ShapeVisitor {
+        override fun visitPolygon(vertices: List<Vector2>) {
+            val verts = vertices.map { b2Vec2().apply { x(it.x); y(it.y) } }
+            val polygon = createHullPolygon(verts)
+            Box2d.b2CreatePolygonShape(bodyId, shapeDef.asPointer(), polygon.asPointer())
         }
 
-        override fun visitCircle(center:Vector2,radius:Float)
-        {
-            circleShape.position.set(center)
-            circleShape.radius = radius
-            fd.shape = circleShape
-            body.createFixture(fd)
+        override fun visitCircle(center: Vector2, radius: Float) {
+            val circle = b2Circle().apply {
+                center().x(center.x)
+                center().y(center.y)
+                radius(radius)
+            }
+            Box2d.b2CreateCircleShape(bodyId, shapeDef.asPointer(), circle.asPointer())
         }
+    }
+
+    /**
+     * see [Box2d.b2ComputeHull] & [b2Polygon].
+     *
+     * important points:
+     * - must be a convex shape (interior of the polygon is to the left of each edge)
+     * - must have at least 3 vertices
+     * - must have at most [B2_MAX_POLYGON_VERTICES] (8) vertices
+     */
+    private fun createHullPolygon(hullVerticesList: List<b2Vec2>):b2Polygon {
+
+        // assert hullVertices.size
+        require(hullVerticesList.size in 3..B2_MAX_POLYGON_VERTICES)
+        {
+            "hullVertices.size must be between 3 and $B2_MAX_POLYGON_VERTICES, but was ${hullVerticesList.size}"
+        }
+
+        // create the polygon from the hull vertices
+        val hullVertices = b2Vec2.b2Vec2Pointer(hullVerticesList.size, true)
+        hullVerticesList.forEachIndexed { index, vec2 -> hullVertices.set(vec2, index) }
+        val hull:b2Hull = Box2d.b2ComputeHull(hullVertices, hullVerticesList.size)
+        return Box2d.b2MakePolygon(hull.asPointer(), 0f)
     }
 }
