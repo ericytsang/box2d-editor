@@ -14,7 +14,7 @@ class VectorPool
 {
     private val pool:MutableList<Vector2> = ArrayList()
 
-    fun newVec():Vector2?
+    fun newVec():Vector2
     {
         return if (pool.isEmpty()) Vector2() else pool.removeAt(pool.size-1)
     }
@@ -30,7 +30,7 @@ class VectorPool
  * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
  */
 class BodyEditorLoader(
-    val model:Model,
+    val model:ProjectModel,
 )
 {
 
@@ -95,8 +95,7 @@ class BodyEditorLoader(
                     val nn = vertices.size
                     while (ii < nn)
                     {
-                        vertices[ii] = vectorPool.newVec()!!.set(polygon.vertices.get(ii)).scl(scale)
-                        vertices[ii]!!.sub(origin)
+                        vertices[ii] = vectorPool.newVec().set(polygon.vertices[ii]).scl(scale).sub(origin)
                         ii++
                     }
                 }
@@ -120,8 +119,8 @@ class BodyEditorLoader(
         val n = rbModel.circles.size
         while (i < n)
         {
-            val circle = rbModel.circles.get(i)
-            val center = vectorPool.newVec()!!.set(circle.center).scl(scale)
+            val circle = rbModel.circles[i]
+            val center = vectorPool.newVec().set(circle.center).scl(scale)
             val radius = circle.radius*scale
 
             circleShape.position = center
@@ -150,7 +149,7 @@ class BodyEditorLoader(
      */
     fun getOrigin(name:String,scale:Float):Vector2 = vec.set(getRigidBody(name).origin).scl(scale)
 
-    data class Model(
+    data class ProjectModel(
         val rigidBodies:Map<String,RigidBodyModel>,
     )
 
@@ -174,16 +173,18 @@ class BodyEditorLoader(
 
     companion object
     {
-        private fun readJson(str:String):Model = Model(
-            rigidBodies = JsonReader().parse(str)["rigidBodies"].map { it.readRigidBody() }.associateBy { it.name },
+        private fun readJson(str:String):ProjectModel = JsonReader().parse(str).readProject()
+
+        private fun JsonValue.readProject():ProjectModel = ProjectModel(
+            rigidBodies = get("rigidBodies").map { it.readRigidBody() }.associateBy { it.name },
         )
 
         private fun JsonValue.readRigidBody():RigidBodyModel = RigidBodyModel(
-            name = this["name"].asString(),
-            imagePath = this["imagePath"].asString(),
-            origin = this["origin"].readOrigin(),
-            polygons = this["polygons"].map { it.readPolygon() },
-            circles = this["circles"].map { it.readCircle() },
+            name = get("name").asString(),
+            imagePath = get("imagePath").asString(),
+            origin = get("origin").readOrigin(),
+            polygons = get("polygons").map { it.readPolygon() },
+            circles = get("circles").map { it.readCircle() },
         )
 
         private fun JsonValue.readOrigin():Vector2 = vector2(
