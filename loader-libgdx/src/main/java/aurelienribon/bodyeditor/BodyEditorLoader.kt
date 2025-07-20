@@ -175,7 +175,7 @@ class BodyEditorLoader(
     companion object
     {
         private fun readJson(str:String):Model = Model(
-            rigidBodies = JsonReader().parse(str).getChild("rigidBodies").associate { rbJson ->
+            rigidBodies = JsonReader().parse(str)["rigidBodies"].associate { rbJson ->
                 val rbModel = readRigidBody(rbJson)
                 rbModel.name to rbModel
             },
@@ -185,10 +185,10 @@ class BodyEditorLoader(
         {
 
             // Polygons
-            val rbModelPolygons = rbJson.get("polygons").map { polygonJson ->
+            val rbModelPolygons = rbJson["polygons"].map { polygonJson ->
                 val polygonModelVertices = polygonJson.map { vertexJson ->
-                    val x = vertexJson.get("x").asFloat()
-                    val y = vertexJson.get("y").asFloat()
+                    val x = vertexJson["x"].asFloat()
+                    val y = vertexJson["y"].asFloat()
                     Vector2(x,y)
                 }
 
@@ -199,10 +199,10 @@ class BodyEditorLoader(
             }
 
             // Circles
-            val rbModelCircles = rbJson.get("circles").map { circleJson ->
-                val circleModelCenterX = circleJson.get("cx").asFloat()
-                val circleModelCenterY = circleJson.get("cy").asFloat()
-                val circleModelRadius = circleJson.get("r").asFloat()
+            val rbModelCircles = rbJson["circles"].map { circleJson ->
+                val circleModelCenterX = circleJson["cx"].asFloat()
+                val circleModelCenterY = circleJson["cy"].asFloat()
+                val circleModelRadius = circleJson["r"].asFloat()
                 val circleModel = CircleModel(
                     center = Vector2(circleModelCenterX,circleModelCenterY),
                     radius = circleModelRadius,
@@ -211,8 +211,8 @@ class BodyEditorLoader(
             }
 
             return RigidBodyModel(
-                name = rbJson.get("name").asString(),
-                imagePath = rbJson.get("imagePath").asString(),
+                name = rbJson["name"].asString(),
+                imagePath = rbJson["imagePath"].asString(),
                 origin = parseOriginOfRigidBody(rbJson),
                 polygons = rbModelPolygons,
                 circles = rbModelCircles,
@@ -221,9 +221,9 @@ class BodyEditorLoader(
 
         private fun parseOriginOfRigidBody(rbJson:JsonValue):Vector2
         {
-            val originJsonObject = rbJson.get("origin")
-            val originX = originJsonObject.get("x").asFloat()
-            val originY = originJsonObject.get("y").asFloat()
+            val originJsonObject = rbJson["origin"]
+            val originX = originJsonObject["x"].asFloat()
+            val originY = originJsonObject["y"].asFloat()
             return Vector2(originX,originY)
         }
     }
