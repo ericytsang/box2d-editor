@@ -24,6 +24,10 @@ class VectorPool
     }
 }
 
+/**
+ * Loads the collision fixtures defined with the Physics Body Editor application.
+ * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
+ */
 class Box2dV1_12_XFixtureAttacher
 {
     /**
@@ -102,7 +106,6 @@ class Box2dV1_12_XFixtureAttacher
 
 /**
  * Loads the collision fixtures defined with the Physics Body Editor application.
- * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
  */
 class BodyEditorLoader(
     val model:ProjectModel,
