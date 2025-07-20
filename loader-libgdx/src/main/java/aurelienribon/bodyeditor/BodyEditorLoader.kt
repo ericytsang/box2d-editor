@@ -30,14 +30,13 @@ class VectorPool
  * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
  */
 class BodyEditorLoader(
-    private val model:ProjectModel,
+    val model:ProjectModel,
 )
 {
 
     // Reusable stuff
     private val lockForReusableStuff = Any()
     private val vectorPool = VectorPool()
-    private val vec = Vector2()
     private val polygonShape = PolygonShape()
     private val circleShape = CircleShape()
 
@@ -81,11 +80,11 @@ class BodyEditorLoader(
         val rbModel:RigidBodyModel = getRigidBody(name)
 
         // TODO: Verify correct, updated method from mul to scl
-        val origin = vec.set(rbModel.origin).scl(scale)
+        val origin = rbModel.origin.cpy().scl(scale)
 
         rbModel.polygons.forEach { polygon ->
             val vertices = polygon.vertices
-                .map { vertex -> vectorPool.newVec().set(vertex).scl(scale).sub(origin) }
+                .map { vertex -> vertex.cpy().scl(scale).sub(origin) }
                 .toTypedArray()
             polygonShape.set(vertices)
             fd.shape = polygonShape
@@ -94,7 +93,7 @@ class BodyEditorLoader(
         }
 
         rbModel.circles.forEach { circle ->
-            val center = vectorPool.newVec().set(circle.center).scl(scale)
+            val center = circle.center.cpy().scl(scale).sub(origin)
             val radius = circle.radius*scale
             circleShape.position = center
             circleShape.radius = radius
@@ -102,6 +101,8 @@ class BodyEditorLoader(
             body.createFixture(fd)
             vectorPool.free(center)
         }
+
+        vectorPool.free(origin)
     }
 
     /**
@@ -116,6 +117,8 @@ class BodyEditorLoader(
      */
     fun getOrigin(name:String,scale:Float):Vector2 = getRigidBody(name).origin.cpy().scl(scale)
 
+    private fun XYModel.cpy():Vector2 = vectorPool.newVec().set(x,y)
+
     private fun getRigidBody(name:String):RigidBodyModel =
         model.rigidBodies[name] ?: error("Name '$name' was not found.")
 
@@ -126,18 +129,23 @@ class BodyEditorLoader(
     class RigidBodyModel(
         val name:String,
         val imagePath:String,
-        val origin:Vector2,
+        val origin:XYModel,
         val polygons:List<PolygonModel>,
         val circles:List<CircleModel>,
     )
 
     class PolygonModel(
-        val vertices:List<Vector2>,
+        val vertices:List<XYModel>,
     )
 
     class CircleModel(
-        val center:Vector2,
+        val center:XYModel,
         val radius:Float,
+    )
+
+    class XYModel(
+        val x:Float,
+        val y:Float,
     )
 
     companion object
@@ -156,7 +164,7 @@ class BodyEditorLoader(
             circles = get("circles").map { it.readCircle() },
         )
 
-        private fun JsonValue.readOrigin():Vector2 = vector2(
+        private fun JsonValue.readOrigin():XYModel = readXY(
             x = get("x"),
             y = get("y"),
         )
@@ -165,19 +173,19 @@ class BodyEditorLoader(
             vertices = map { it.readVertex() },
         )
 
-        private fun JsonValue.readVertex():Vector2 = vector2(
+        private fun JsonValue.readVertex():XYModel = readXY(
             x = get("x"),
             y = get("y"),
         )
 
         private fun JsonValue.readCircle():CircleModel = CircleModel(
-            center = vector2(
+            center = readXY(
                 x = get("cx"),
                 y = get("cy"),
             ),
             radius = get("r").asFloat(),
         )
 
-        private fun vector2(x:JsonValue,y:JsonValue):Vector2 = Vector2(x.asFloat(),y.asFloat())
+        private fun readXY(x:JsonValue,y:JsonValue):XYModel = XYModel(x.asFloat(),y.asFloat())
     }
 }
