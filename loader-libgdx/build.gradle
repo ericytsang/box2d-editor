@@ -1,9 +1,7 @@
 plugins {
     id 'java-library'
+    id 'kotlin'
 }
-
-sourceCompatibility = 1.8
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 dependencies {
     implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
@@ -12,12 +10,6 @@ dependencies {
     implementation "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
     implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion"
     implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-}
-
-sourceSets {
-    main {
-        java.srcDirs = ["src"]
-    }
 }
 
 jar {
