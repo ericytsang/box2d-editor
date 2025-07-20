@@ -30,7 +30,7 @@ class VectorPool
  * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
  */
 class BodyEditorLoader(
-    val model:ProjectModel,
+    private val model:ProjectModel,
 )
 {
 
