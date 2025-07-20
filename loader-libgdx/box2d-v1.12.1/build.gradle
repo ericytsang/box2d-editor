@@ -6,7 +6,7 @@ plugins {
 dependencies {
     api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
 
-    api project(':loader-libgdx-common')
+    api project(':loader-libgdx:core')
 }
 
 jar {
