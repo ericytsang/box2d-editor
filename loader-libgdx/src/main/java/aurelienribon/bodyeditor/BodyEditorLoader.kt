@@ -175,18 +175,15 @@ class BodyEditorLoader(
     companion object
     {
         private fun readJson(str:String):Model = Model(
-            rigidBodies = JsonReader().parse(str)["rigidBodies"].associate { rbJson ->
-                val rbModel = readRigidBody(rbJson)
-                rbModel.name to rbModel
-            },
+            rigidBodies = JsonReader().parse(str)["rigidBodies"].map { it.readRigidBody() }.associateBy { it.name },
         )
 
-        private fun readRigidBody(rbJson:JsonValue):RigidBodyModel = RigidBodyModel(
-            name = rbJson["name"].asString(),
-            imagePath = rbJson["imagePath"].asString(),
-            origin = rbJson["origin"].readOrigin(),
-            polygons = rbJson["polygons"].map { it.readPolygon() },
-            circles = rbJson["circles"].map { it.readCircle() },
+        private fun JsonValue.readRigidBody():RigidBodyModel = RigidBodyModel(
+            name = this["name"].asString(),
+            imagePath = this["imagePath"].asString(),
+            origin = this["origin"].readOrigin(),
+            polygons = this["polygons"].map { it.readPolygon() },
+            circles = this["circles"].map { it.readCircle() },
         )
 
         private fun JsonValue.readOrigin():Vector2 = vector2(
