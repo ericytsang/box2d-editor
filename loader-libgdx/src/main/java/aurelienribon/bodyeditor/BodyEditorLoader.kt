@@ -181,50 +181,46 @@ class BodyEditorLoader(
             },
         )
 
-        private fun readRigidBody(rbJson:JsonValue):RigidBodyModel
+        private fun readRigidBody(rbJson:JsonValue):RigidBodyModel = RigidBodyModel(
+            name = rbJson["name"].asString(),
+            imagePath = rbJson["imagePath"].asString(),
+            origin = rbJson["origin"].readOrigin(),
+            polygons = rbJson["polygons"].map { it.readPolygon() },
+            circles = rbJson["circles"].map { it.readCircle() },
+        )
+
+        private fun JsonValue.readOrigin():Vector2
         {
+            val originX = this["x"].asFloat()
+            val originY = this["y"].asFloat()
+            return Vector2(originX,originY)
+        }
 
-            // Polygons
-            val rbModelPolygons = rbJson["polygons"].map { polygonJson ->
-                val polygonModelVertices = polygonJson.map { vertexJson ->
-                    val x = vertexJson["x"].asFloat()
-                    val y = vertexJson["y"].asFloat()
-                    Vector2(x,y)
-                }
-
-                PolygonModel(
-                    vertices = polygonModelVertices,
-                    buffer = arrayOfNulls(polygonModelVertices.size),
-                )
-            }
-
-            // Circles
-            val rbModelCircles = rbJson["circles"].map { circleJson ->
-                val circleModelCenterX = circleJson["cx"].asFloat()
-                val circleModelCenterY = circleJson["cy"].asFloat()
-                val circleModelRadius = circleJson["r"].asFloat()
-                val circleModel = CircleModel(
-                    center = Vector2(circleModelCenterX,circleModelCenterY),
-                    radius = circleModelRadius,
-                )
-                circleModel
-            }
-
-            return RigidBodyModel(
-                name = rbJson["name"].asString(),
-                imagePath = rbJson["imagePath"].asString(),
-                origin = parseOriginOfRigidBody(rbJson),
-                polygons = rbModelPolygons,
-                circles = rbModelCircles,
+        private fun JsonValue.readPolygon():PolygonModel
+        {
+            val polygonModelVertices = map { it -> it.readVertex() }
+            return PolygonModel(
+                vertices = polygonModelVertices,
+                buffer = arrayOfNulls(polygonModelVertices.size),
             )
         }
 
-        private fun parseOriginOfRigidBody(rbJson:JsonValue):Vector2
+        private fun JsonValue.readVertex():Vector2
         {
-            val originJsonObject = rbJson["origin"]
-            val originX = originJsonObject["x"].asFloat()
-            val originY = originJsonObject["y"].asFloat()
-            return Vector2(originX,originY)
+            val x = this["x"].asFloat()
+            val y = this["y"].asFloat()
+            return Vector2(x,y)
+        }
+
+        private fun JsonValue.readCircle():CircleModel
+        {
+            val centerX = this["cx"].asFloat()
+            val centerY = this["cy"].asFloat()
+            val radius = this["r"].asFloat()
+            return CircleModel(
+                center = Vector2(centerX,centerY),
+                radius = radius,
+            )
         }
     }
 }
