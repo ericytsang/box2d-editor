@@ -8,7 +8,6 @@ import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 import com.badlogic.gdx.utils.JsonReader
 import com.badlogic.gdx.utils.JsonValue
-import kotlin.collections.get
 
 class VectorPool
 {
@@ -25,25 +24,8 @@ class VectorPool
     }
 }
 
-/**
- * Loads the collision fixtures defined with the Physics Body Editor application.
- * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
- */
-class BodyEditorLoader(
-    val model:ProjectModel,
-)
+class Box2dV1_12_XFixtureAttacher
 {
-
-    // Reusable stuff
-    private val lockForReusableStuff = Any()
-    private val vectorPool = VectorPool()
-    private val polygonShape = PolygonShape()
-    private val circleShape = CircleShape()
-
-    constructor(file:FileHandle):this(readJson(file.readString()))
-
-    constructor(str:String):this(readJson(str))
-
     /**
      * Creates and applies the fixtures defined in the editor. The name
      * parameter is used to retrieve the right fixture from the loaded file.
@@ -71,10 +53,73 @@ class BodyEditorLoader(
      * @param scale The desired scale of the body. The default width is 1.
      */
     fun attachFixture(
+        loader:BodyEditorLoader,
         body:Body,
         name:String,
         fd:FixtureDef,
         scale:Float,
+    )
+    {
+        val polygonShape = PolygonShape()
+        val circleShape = CircleShape()
+        loader.accept(
+            name = name,
+            scale = scale,
+            visitor = Visitor(
+                polygonShape = polygonShape,
+                circleShape = circleShape,
+                body = body,
+                fd = fd,
+            ),
+        )
+        polygonShape.dispose()
+        circleShape.dispose()
+    }
+
+    private inner class Visitor(
+        private val polygonShape:PolygonShape,
+        private val circleShape:CircleShape,
+        private val body:Body,
+        private val fd:FixtureDef,
+    ):BodyEditorLoader.ShapeVisitor
+    {
+        override fun visitPolygon(vertices:List<Vector2>)
+        {
+            polygonShape.set(vertices.toTypedArray())
+            fd.shape = polygonShape
+            body.createFixture(fd)
+        }
+
+        override fun visitCircle(center:Vector2,radius:Float)
+        {
+            circleShape.position.set(center)
+            circleShape.radius = radius
+            fd.shape = circleShape
+            body.createFixture(fd)
+        }
+    }
+}
+
+/**
+ * Loads the collision fixtures defined with the Physics Body Editor application.
+ * You only need to give it a body and the corresponding fixture name, and it will attach these fixtures to your body.
+ */
+class BodyEditorLoader(
+    val model:ProjectModel,
+)
+{
+    // Reusable stuff
+    private val lockForReusableStuff = Any()
+    private val vectorPool = VectorPool()
+
+    constructor(file:FileHandle):this(readJson(file.readString()))
+
+    constructor(str:String):this(readJson(str))
+
+    fun accept(
+        name:String,
+        scale:Float,
+        visitor:ShapeVisitor,
     ) = synchronized(lockForReusableStuff)
     {
         val rbModel:RigidBodyModel = getRigidBody(name)
@@ -83,22 +128,15 @@ class BodyEditorLoader(
         val origin = rbModel.origin.cpy().scl(scale)
 
         rbModel.polygons.forEach { polygon ->
-            val vertices = polygon.vertices
-                .map { vertex -> vertex.cpy().scl(scale).sub(origin) }
-                .toTypedArray()
-            polygonShape.set(vertices)
-            fd.shape = polygonShape
-            body.createFixture(fd)
+            val vertices = polygon.vertices.map { vertex -> vertex.cpy().scl(scale).sub(origin) }
+            visitor.visitPolygon(vertices)
             vertices.forEach { vectorPool.free(it) }
         }
 
         rbModel.circles.forEach { circle ->
             val center = circle.center.cpy().scl(scale).sub(origin)
             val radius = circle.radius*scale
-            circleShape.position = center
-            circleShape.radius = radius
-            fd.shape = circleShape
-            body.createFixture(fd)
+            visitor.visitCircle(center, radius)
             vectorPool.free(center)
         }
 
@@ -121,6 +159,12 @@ class BodyEditorLoader(
 
     private fun getRigidBody(name:String):RigidBodyModel =
         model.rigidBodies[name] ?: error("Name '$name' was not found.")
+
+    interface ShapeVisitor
+    {
+        fun visitCircle(center:Vector2,radius:Float)
+        fun visitPolygon(vertices:List<Vector2>)
+    }
 
     data class ProjectModel(
         val rigidBodies:Map<String,RigidBodyModel>,

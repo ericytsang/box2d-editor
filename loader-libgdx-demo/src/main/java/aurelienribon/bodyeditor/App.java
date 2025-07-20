@@ -141,7 +141,7 @@ public class App extends ApplicationAdapter {
         bottleModel = world.createBody(bd);
 
         // 4. Create the body fixture automatically by using the loader.
-        loader.attachFixture(bottleModel, "test01", fd, BOTTLE_WIDTH);
+        new Box2dV1_12_XFixtureAttacher().attachFixture(loader, bottleModel, "test01", fd, BOTTLE_WIDTH);
         bottleModelOrigin = loader.getOrigin("test01", BOTTLE_WIDTH);
     }
 
