@@ -22,7 +22,7 @@ scaling circle shapes in the :libgdx-loader:core
   ```
 * run the demo for Box2D v3.1.1
   ```shell
-  ./gradlew :loader-libgdx:box2d-v3.1.1-demo:run
+  ./gradlew :loader-libgdx:box2d-v3.1.1-0-demo:run
   ```
 
 Physics Body Editor
