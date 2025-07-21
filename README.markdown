@@ -1,3 +1,30 @@
+# Additions in this fork
+
+## additions 
+added Kotlin language support to modules
+added Box2D v3.1.1-0 support
+
+## refactoring
+extracted code for parsing models out into a core module: :libgdx-loader:core
+
+## fixes
+scaling circle shapes in the :libgdx-loader:core
+
+
+# Quick Start Guide
+* run the editor
+  ```shell
+  ./gradlew :editor:run
+  ```
+* run the demo for Box2D v1.12.1
+  ```shell
+  ./gradlew :loader-libgdx:box2d-v1.12.1-demo:run
+  ```
+* run the demo for Box2D v3.1.1
+  ```shell
+  ./gradlew :loader-libgdx:box2d-v3.1.1-demo:run
+  ```
+
 Physics Body Editor
 ==========
 <p align="center"><img src="readmeImgs/slide-physics-body-editor.jpg" alt="Physics Body Editor"/></p>
