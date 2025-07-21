@@ -23,7 +23,7 @@ Features
 <img src="readmeImgs/pbe-workflow.jpg" alt="From the editor to the game"/>
 <img src="readmeImgs/pbe-02.jpg" alt="Features!"/>
 
-# Additions in this fork (ericytsang)
+## Additions in this fork (ericytsang)
 * additions
   added Kotlin language support to modules
   added Box2D v3.1.1-0 support
