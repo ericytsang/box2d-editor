@@ -2,9 +2,6 @@ plugins {
     id 'application'
 }
 
-sourceCompatibility = 1.8
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-project.ext.mainClassName = "aurelienribon.bodyeditor.ui.Main"
 dependencies {
     implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
     implementation "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
@@ -22,54 +19,6 @@ dependencies {
 
 }
 
-sourceSets {
-    main {
-        java
-                {
-                    srcDirs = ["src/main/java"]
-                    destinationDirectory.set(new File("$buildDir/classes"))
-                }
-        resources.srcDirs = ["src/main/resources"]
-        output.resourcesDir 'build/classes'
-    }
-}
-
 application {
     mainClass = 'aurelienribon.bodyeditor.ui.Main'
-}
-
-jar {
-    archiveFileName = "PhysicsBodyEditor.jar"
-
-//    doFirst {
-//        copy {
-//            from 'src/SolAppListener.gwt.xml'
-//            into 'build/classes/main'
-//        }
-//    }
-}
-
-
-distributions {
-    main {
-        contents {
-            from('test-me!') {
-                into 'test-me!'
-            }
-        }
-    }
-}
-
-eclipse.project {
-    name = appName + "-editor"
-}
-
-idea {
-    module {
-        // Change around the output a bit
-        inheritOutputDirs = false
-        outputDir = file('build/classes')
-        testOutputDir = file('build/testClasses')
-        downloadSources = true
-    }
 }

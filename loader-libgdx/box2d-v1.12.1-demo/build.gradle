@@ -16,11 +16,3 @@ dependencies {
 application {
     mainClass = 'aurelienribon.bodyeditor.Main'
 }
-
-tasks.withType(Exec) {
-    group = 'loader-demo'
-}
-
-jar {
-    archiveFileName = "loader-libgdx-demo.jar"
-}
