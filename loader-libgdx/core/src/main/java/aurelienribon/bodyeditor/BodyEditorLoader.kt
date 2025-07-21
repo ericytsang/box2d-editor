@@ -45,8 +45,9 @@ class BodyEditorLoader(
 
     /**
      * Gets the image path attached to the given name.
+     * Not a required field; could be null if user chose not to add an image.
      */
-    fun getImagePath(name:String):String = getRigidBody(name).imagePath
+    fun getImagePath(name:String):String? = getRigidBody(name).imagePath
 
     /**
      * Gets the origin point attached to the given name. Since the point is
@@ -72,7 +73,9 @@ class BodyEditorLoader(
 
     class RigidBodyModel(
         val name:String,
-        val imagePath:String,
+
+        /** not a required field; user can choose not to add an image. */
+        val imagePath:String?,
         val origin:XYModel,
         val polygons:List<PolygonModel>,
         val circles:List<CircleModel>,
