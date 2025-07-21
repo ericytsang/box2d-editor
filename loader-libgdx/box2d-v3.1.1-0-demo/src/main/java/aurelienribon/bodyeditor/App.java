@@ -1,22 +1,10 @@
 package aurelienribon.bodyeditor;
 
-import aurelienribon.tweenengine.BaseTween;
-import aurelienribon.tweenengine.Tween;
-import aurelienribon.tweenengine.TweenCallback;
-import aurelienribon.tweenengine.TweenManager;
+import static aurelienribon.bodyeditor.ExtensionsKt.radians;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Texture.TextureFilter;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.box2d.Box2d;
 import com.badlogic.gdx.box2d.enums.b2BodyType;
 import com.badlogic.gdx.box2d.structs.b2BodyDef;
@@ -27,8 +15,23 @@ import com.badlogic.gdx.box2d.structs.b2ShapeDef;
 import com.badlogic.gdx.box2d.structs.b2Vec2;
 import com.badlogic.gdx.box2d.structs.b2WorldDef;
 import com.badlogic.gdx.box2d.structs.b2WorldId;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 
 import java.util.Random;
+
+import aurelienribon.tweenengine.BaseTween;
+import aurelienribon.tweenengine.Tween;
+import aurelienribon.tweenengine.TweenCallback;
+import aurelienribon.tweenengine.TweenManager;
 
 public class App extends ApplicationAdapter {
 
@@ -78,7 +81,7 @@ public class App extends ApplicationAdapter {
         worldDef.gravity().y(-10.0f);
         worldId = Box2d.b2CreateWorld(worldDef.asPointer());
         createGround();
-        createBottle();
+        createBottle(); // <-- this method uses the BodyEditorLoader class
         createBalls();
 
         // Render initialization
@@ -117,41 +120,54 @@ public class App extends ApplicationAdapter {
         bd.position().y(0.0f);
         bd.type(b2BodyType.b2_staticBody);
 
-        b2BodyId groundBody = Box2d.b2CreateBody(worldId, bd.asPointer());
         b2Polygon shape = Box2d.b2MakeBox(VIEWPORT_WIDTH, 1.0f);
+
         b2ShapeDef fd = Box2d.b2DefaultShapeDef();
         fd.density(1.0f);
         fd.material().friction(0.5f);
         fd.material().restitution(0.5f);
+
+        b2BodyId groundBody = Box2d.b2CreateBody(worldId, bd.asPointer());
         Box2d.b2CreatePolygonShape(groundBody, fd.asPointer(), shape.asPointer());
     }
 
     private void createBottle() {
+        // 0. Create a loader for the file saved from the editor.
         BodyEditorLoader loader = BodyEditorLoader.fromFile(Gdx.files.internal("data/test.json"));
+
+        // 1. Create a BodyDef, as usual.
         b2BodyDef bd = Box2d.b2DefaultBodyDef();
         bd.type(b2BodyType.b2_dynamicBody);
-        b2BodyId bodyId = Box2d.b2CreateBody(worldId, bd.asPointer());
+
+        // 2. Create a FixtureDef, as usual.
         b2ShapeDef fd = Box2d.b2DefaultShapeDef();
         fd.density(1.0f);
         fd.material().friction(0.5f);
         fd.material().restitution(0.3f);
-        Box2dV3_1_1_0XFixtureAttacher.attachFixture(loader, bodyId, "test01", fd, BOTTLE_WIDTH);
-        bottleModel = bodyId;
+
+        // 3. Create a Body, as usual.
+        bottleModel = Box2d.b2CreateBody(worldId, bd.asPointer());
+
+        // 4. Create the body fixture automatically by using the loader.
+        Box2dV3_1_1_0XFixtureAttacher.attachFixture(loader, bottleModel, "test01", fd, BOTTLE_WIDTH);
         bottleModelOrigin = loader.getOrigin("test01", BOTTLE_WIDTH);
     }
 
     private void createBalls() {
         b2BodyDef ballBodyDef = Box2d.b2DefaultBodyDef();
         ballBodyDef.type(b2BodyType.b2_dynamicBody);
+
+        b2Circle shape = new b2Circle();
+        shape.radius(BALL_RADIUS);
+
         b2ShapeDef fd = Box2d.b2DefaultShapeDef();
         fd.density(1.0f);
         fd.material().friction(0.5f);
         fd.material().restitution(0.5f);
+
         ballModels = new b2BodyId[MAX_BALLS];
         for (int i = 0; i < MAX_BALLS; i++) {
             b2BodyId ballBody = Box2d.b2CreateBody(worldId, ballBodyDef.asPointer());
-            b2Circle shape = new b2Circle();
-            shape.radius(BALL_RADIUS);
             Box2d.b2CreateCircleShape(ballBody, fd.asPointer(), shape.asPointer());
             ballModels[i] = ballBody;
         }
@@ -200,20 +216,15 @@ public class App extends ApplicationAdapter {
         tweenManager.update(1 / 60f);
         Box2d.b2World_Step(worldId, 1 / 60f, 10);
 
-        // Get bottle position and rotation from Box2D 3.1.1-0 API
-        com.badlogic.gdx.box2d.structs.b2Vec2 bottlePosVec = Box2d.b2Body_GetPosition(bottleModel);
-        Vector2 bottlePos = new Vector2(bottlePosVec.x(), bottlePosVec.y()).sub(bottleModelOrigin);
-        bottleSprite.setPosition(bottlePos.x, bottlePos.y);
+        b2Vec2 bottlePos = Box2d.b2Body_GetPosition(bottleModel);
+        bottleSprite.setPosition(bottlePos.x()-bottleModelOrigin.x, bottlePos.y()-bottleModelOrigin.y);
         bottleSprite.setOrigin(bottleModelOrigin.x, bottleModelOrigin.y);
-        float bottleAngle = Box2d.b2Body_GetRotation(bottleModel).angle();
-        bottleSprite.setRotation(bottleAngle * MathUtils.radiansToDegrees);
+        bottleSprite.setRotation(radians(Box2d.b2Body_GetRotation(bottleModel)) * MathUtils.radiansToDegrees);
 
         for (int i = 0; i < MAX_BALLS; i++) {
-            com.badlogic.gdx.box2d.structs.b2Vec2 ballPosVec = Box2d.b2Body_GetPosition(ballModels[i]);
-            Vector2 ballPos = new Vector2(ballPosVec.x(), ballPosVec.y());
-            ballSprites[i].setPosition(ballPos.x - ballSprites[i].getWidth() / 2, ballPos.y - ballSprites[i].getHeight() / 2);
-            float ballAngle = Box2d.b2Body_GetRotation(ballModels[i]).angle();
-            ballSprites[i].setRotation(ballAngle * MathUtils.radiansToDegrees);
+            b2Vec2 ballPos = Box2d.b2Body_GetPosition(ballModels[i]);
+            ballSprites[i].setPosition(ballPos.x() - ballSprites[i].getWidth() / 2, ballPos.y() - ballSprites[i].getHeight() / 2);
+            ballSprites[i].setRotation(radians(Box2d.b2Body_GetRotation(ballModels[i])) * MathUtils.radiansToDegrees);
         }
 
         // Render
@@ -239,20 +250,19 @@ public class App extends ApplicationAdapter {
     // -------------------------------------------------------------------------
 
     private void restart() {
-        // Set bottle transform using Box2D 3.1.1-0 API
-        Box2d.b2Body_SetTransform(bottleModel, new com.badlogic.gdx.box2d.structs.b2Vec2(0, 3), Box2d.b2MakeRot(0.2f));
-        Box2d.b2Body_SetLinearVelocity(bottleModel, new com.badlogic.gdx.box2d.structs.b2Vec2(0, 0));
+        Box2d.b2Body_SetTransform(bottleModel, createB2Vec2(0, 3), Box2d.b2MakeRot(0.2f));
+        Box2d.b2Body_SetLinearVelocity(bottleModel, createB2Vec2(0, 0));
         Box2d.b2Body_SetAngularVelocity(bottleModel, 0);
 
         for (int i = 0; i < MAX_BALLS; i++) {
-            float tx = rand.nextFloat() * 1.0f - 0.5f;
+            float tx = rand.nextFloat() - 0.5f;
             float ty = camera.position.y + camera.viewportHeight / 2 + BALL_RADIUS;
             float angle = rand.nextFloat() * MathUtils.PI * 2;
 
-            Box2d.b2Body_SetActive(ballModels[i], false);
-            Box2d.b2Body_SetLinearVelocity(ballModels[i], new com.badlogic.gdx.box2d.structs.b2Vec2(0, 0));
+            Box2d.b2Body_Disable(ballModels[i]);
+            Box2d.b2Body_SetLinearVelocity(ballModels[i], createB2Vec2(0, 0));
             Box2d.b2Body_SetAngularVelocity(ballModels[i], 0);
-            Box2d.b2Body_SetTransform(ballModels[i], new com.badlogic.gdx.box2d.structs.b2Vec2(tx, ty), Box2d.b2MakeRot(angle));
+            Box2d.b2Body_SetTransform(ballModels[i], createB2Vec2(tx, ty), Box2d.b2MakeRot(angle));
         }
 
         tweenManager.killAll();
@@ -264,10 +274,17 @@ public class App extends ApplicationAdapter {
             public void onEvent(int type, BaseTween<?> source) {
                 if (idx < ballModels.length) {
                     Box2d.b2Body_SetAwake(ballModels[idx], true);
-                    Box2d.b2Body_SetActive(ballModels[idx], true);
+                    Box2d.b2Body_Enable(ballModels[idx]);
                     idx += 1;
                 }
             }
         }).repeat(-1, 0.1f).start(tweenManager);
+    }
+
+    private b2Vec2 createB2Vec2(float x, float y) {
+        b2Vec2 vec = new b2Vec2();
+        vec.x(x);
+        vec.y(y);
+        return vec;
     }
 }
