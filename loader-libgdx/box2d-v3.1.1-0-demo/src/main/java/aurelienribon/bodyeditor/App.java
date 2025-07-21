@@ -59,7 +59,6 @@ public class App extends ApplicationAdapter {
     private Sprite bottleSprite;
     private Texture ballTexture;
     private Sprite[] ballSprites;
-    private Texture whiteTexture;
     private Sprite groundSprite;
 
     // Render general
@@ -190,7 +189,7 @@ public class App extends ApplicationAdapter {
             ballSprites[i].setOrigin(BALL_RADIUS, BALL_RADIUS);
         }
 
-        whiteTexture = new Texture(Gdx.files.internal("data/gfx/white.png"));
+        Texture whiteTexture = new Texture(Gdx.files.internal("data/gfx/white.png"));
 
         groundSprite = new Sprite(whiteTexture);
         groundSprite.setSize(VIEWPORT_WIDTH, 1);

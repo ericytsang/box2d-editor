@@ -18,7 +18,7 @@ application {
     mainClass = 'aurelienribon.bodyeditor.Main'
 }
 
-tasks.withType(Exec) {
+tasks.withType(Exec).configureEach {
     group = 'loader-demo'
 }
 
