@@ -1,36 +1,7 @@
-# Additions in this fork
+# Physics Body Editor
+<img src="readmeImgs/slide-physics-body-editor.jpg" alt="Physics Body Editor"/>
 
-## additions 
-added Kotlin language support to modules
-added Box2D v3.1.1-0 support
-
-## refactoring
-extracted code for parsing models out into a core module: :libgdx-loader:core
-
-## fixes
-scaling circle shapes in the :libgdx-loader:core
-
-
-# Quick Start Guide
-* run the editor
-  ```shell
-  ./gradlew :editor:run
-  ```
-* run the demo for Box2D v1.12.1
-  ```shell
-  ./gradlew :loader-libgdx:box2d-v1.12.1-demo:run
-  ```
-* run the demo for Box2D v3.1.1
-  ```shell
-  ./gradlew :loader-libgdx:box2d-v3.1.1-0-demo:run
-  ```
-
-Physics Body Editor
-==========
-<p align="center"><img src="readmeImgs/slide-physics-body-editor.jpg" alt="Physics Body Editor"/></p>
-
-Introduction
---------
+## Introduction
 
 Physics Body Editor is all about making your life easier with physics engines. Specifically, it targets the creation of collision shapes for your game objects: we call them rigid bodies. It can also let you combine these objects together and link them with joints to create complex objects: we call them dynamic objects.
 
@@ -49,11 +20,19 @@ Features
 * Loader provided for LibGDX game framework,
 * Simple export format (JSON), to let you create your own loader for any framework in any language.
 
-<p align="center"><img src="readmeImgs/pbe-workflow.jpg" alt="From the editor to the game"/></p>
-<p align="center"><img src="readmeImgs/pbe-02.jpg" alt="Features!"/></p>
+<img src="readmeImgs/pbe-workflow.jpg" alt="From the editor to the game"/>
+<img src="readmeImgs/pbe-02.jpg" alt="Features!"/>
 
-Technologies
---------
+# Additions in this fork (ericytsang)
+* additions
+  added Kotlin language support to modules
+  added Box2D v3.1.1-0 support
+* refactors
+  extracted code for parsing models out into a core module: :libgdx-loader:core
+* fixes
+  scaling circle shapes in the :libgdx-loader:core
+
+## Technologies
 
 The application uses the following technologies:
 
@@ -61,7 +40,20 @@ The application uses the following technologies:
 * [Box2d](http://box2d.org/), as the embedded physics engine (available in Java thanks to libGDX),
 * [Farseer engine](http://farseerphysics.codeplex.com/), for its auto-trace and polygon decomposition algorithms.
 
-Getting Started
---------
+## Quick Start Guide
+* run the editor
+  ```shell
+  ./gradlew :editor:run
+  ```
+* run the demo for Box2D v1.12.1
+  ```shell
+  ./gradlew :loader-libgdx:box2d-v1.12.1-demo:run
+  ```
+* run the demo for Box2D v3.1.1
+  ```shell
+  ./gradlew :loader-libgdx:box2d-v3.1.1-0-demo:run
+  ```
+
+## Getting Started
 * [Wiki](https://github.com/MovingBlocks/box2d-editor/wiki)
 * [YouTube](https://youtu.be/KASY91EiTXQ)
