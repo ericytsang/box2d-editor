@@ -48,6 +48,8 @@ class BodyEditorLoader(
             circleShapeIds
         }
 
+        vectorPool.free(origin)
+
         polygonShapeIds+circleShapeIds
     }
 
