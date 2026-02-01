@@ -1,5 +1,6 @@
 package aurelienribon.bodyeditor;
 
+import static aurelienribon.bodyeditor.BodyEditorLoaderKt.xyModel;
 import static aurelienribon.bodyeditor.ExtensionsKt.radians;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -148,8 +149,8 @@ public class App extends ApplicationAdapter {
         bottleModel = Box2d.b2CreateBody(worldId, bd.asPointer());
 
         // 4. Create the body fixture automatically by using the loader.
-        Box2dV3_1_1_0XFixtureAttacher.attachFixture(loader, bottleModel, "test01", fd, BOTTLE_WIDTH);
-        bottleModelOrigin = loader.getOrigin("test01", BOTTLE_WIDTH);
+        Box2dV3_1_1_0XFixtureAttacher.attachFixture(loader, bottleModel, "test01", fd, xyModel(BOTTLE_WIDTH));
+        bottleModelOrigin = loader.getOrigin("test01", xyModel(BOTTLE_WIDTH));
     }
 
     private void createBalls() {

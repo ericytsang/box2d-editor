@@ -27,6 +27,8 @@ import com.badlogic.gdx.physics.box2d.World;
 
 import java.util.Random;
 
+import static aurelienribon.bodyeditor.BodyEditorLoaderKt.xyModel;
+
 public class App extends ApplicationAdapter {
 
     // -------------------------------------------------------------------------
@@ -141,8 +143,8 @@ public class App extends ApplicationAdapter {
         bottleModel = world.createBody(bd);
 
         // 4. Create the body fixture automatically by using the loader.
-        Box2dV1_12_XFixtureAttacher.attachFixture(loader, bottleModel, "test01", fd, BOTTLE_WIDTH);
-        bottleModelOrigin = loader.getOrigin("test01", BOTTLE_WIDTH);
+        Box2dV1_12_XFixtureAttacher.attachFixture(loader, bottleModel, "test01", fd, xyModel(BOTTLE_WIDTH));
+        bottleModelOrigin = loader.getOrigin("test01", xyModel(BOTTLE_WIDTH));
     }
 
     private void createBalls() {
