@@ -81,8 +81,14 @@ class BodyEditorLoader(
     data class RigidBodyModel(
         val name:String,
         val imagePath:String?,
+
+        /** [origin] is where the center of the Box2D body is located. */
         val origin:XYModel,
+
+        /** [polygons] is used to create the Box2D polygon shapes that are attached to the Box2D body. */
         val polygons:List<PolygonModel>,
+
+        /** [polygons] is used to create the Box2D circle shapes that are attached to the Box2D body. */
         val circles:List<CircleModel>,
     )
 
