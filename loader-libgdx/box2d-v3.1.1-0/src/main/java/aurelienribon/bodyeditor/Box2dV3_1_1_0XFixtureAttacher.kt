@@ -1,5 +1,6 @@
 package aurelienribon.bodyeditor
 
+import aurelienribon.bodyeditor.BodyEditorLoader.XYModel
 import com.badlogic.gdx.box2d.Box2d
 import com.badlogic.gdx.box2d.Constants.B2_MAX_POLYGON_VERTICES
 import com.badlogic.gdx.box2d.structs.b2BodyId
@@ -7,6 +8,7 @@ import com.badlogic.gdx.box2d.structs.b2Circle
 import com.badlogic.gdx.box2d.structs.b2Hull
 import com.badlogic.gdx.box2d.structs.b2Polygon
 import com.badlogic.gdx.box2d.structs.b2ShapeDef
+import com.badlogic.gdx.box2d.structs.b2ShapeId
 import com.badlogic.gdx.box2d.structs.b2Vec2
 import com.badlogic.gdx.math.Vector2
 
@@ -47,35 +49,33 @@ object Box2dV3_1_1_0XFixtureAttacher {
         bodyId: b2BodyId,
         name: String,
         shapeDef: b2ShapeDef,
-        scale: Float,
-    ) {
-        loader.accept(
-            name = name,
-            scale = scale,
-            visitor = Visitor(
-                bodyId = bodyId,
-                shapeDef = shapeDef,
-            ),
-        )
-    }
+        scale: XYModel,
+    ):List<b2ShapeId> = loader.accept(
+        name = name,
+        scale = scale,
+        visitor = Visitor(
+            bodyId = bodyId,
+            shapeDef = shapeDef,
+        ),
+    )
 
     private class Visitor(
         private val bodyId: b2BodyId,
         private val shapeDef: b2ShapeDef,
-    ) : BodyEditorLoader.ShapeVisitor {
-        override fun visitPolygon(vertices: List<Vector2>) {
+    ) : BodyEditorLoader.ShapeVisitor<b2ShapeId> {
+        override fun visitPolygon(vertices: List<Vector2>):b2ShapeId {
             val verts = vertices.map { b2Vec2().apply { x(it.x); y(it.y) } }
             val polygon = createHullPolygon(verts)
-            Box2d.b2CreatePolygonShape(bodyId, shapeDef.asPointer(), polygon.asPointer())
+            return Box2d.b2CreatePolygonShape(bodyId, shapeDef.asPointer(), polygon.asPointer())
         }
 
-        override fun visitCircle(center: Vector2, radius: Float) {
+        override fun visitCircle(center: Vector2, radius: Float):b2ShapeId {
             val circle = b2Circle().apply {
                 center().x(center.x)
                 center().y(center.y)
                 radius(radius)
             }
-            Box2d.b2CreateCircleShape(bodyId, shapeDef.asPointer(), circle.asPointer())
+            return Box2d.b2CreateCircleShape(bodyId, shapeDef.asPointer(), circle.asPointer())
         }
     }
 

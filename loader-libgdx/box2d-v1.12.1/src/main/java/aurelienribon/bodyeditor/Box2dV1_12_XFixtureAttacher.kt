@@ -1,8 +1,10 @@
 package aurelienribon.bodyeditor
 
+import aurelienribon.bodyeditor.BodyEditorLoader.XYModel
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.Body
 import com.badlogic.gdx.physics.box2d.CircleShape
+import com.badlogic.gdx.physics.box2d.Fixture
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.PolygonShape
 
@@ -44,7 +46,7 @@ object Box2dV1_12_XFixtureAttacher
         body:Body,
         name:String,
         fd:FixtureDef,
-        scale:Float,
+        scale:XYModel,
     )
     {
         val polygonShape = PolygonShape()
@@ -68,21 +70,21 @@ object Box2dV1_12_XFixtureAttacher
         private val circleShape:CircleShape,
         private val body:Body,
         private val fd:FixtureDef,
-    ):BodyEditorLoader.ShapeVisitor
+    ):BodyEditorLoader.ShapeVisitor<Fixture>
     {
-        override fun visitPolygon(vertices:List<Vector2>)
+        override fun visitPolygon(vertices:List<Vector2>):Fixture
         {
             polygonShape.set(vertices.toTypedArray())
             fd.shape = polygonShape
-            body.createFixture(fd)
+            return body.createFixture(fd)
         }
 
-        override fun visitCircle(center:Vector2,radius:Float)
+        override fun visitCircle(center:Vector2,radius:Float):Fixture
         {
             circleShape.position.set(center)
             circleShape.radius = radius
             fd.shape = circleShape
-            body.createFixture(fd)
+            return body.createFixture(fd)
         }
     }
 }
