@@ -1,0 +1,16 @@
+plugins {
+    id 'kotlin'
+}
+
+dependencies {
+    implementation "com.badlogicgames.gdx:gdx:1.12.1"
+    implementation "com.badlogicgames.gdx:gdx-box2d:1.12.1"
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl:1.12.1"
+    implementation "com.badlogicgames.gdx:gdx-box2d-platform:1.12.1:natives-desktop"
+    implementation "com.badlogicgames.gdx:gdx-platform:1.12.1"
+    implementation "com.badlogicgames.gdx:gdx-platform:1.12.1:natives-desktop"
+
+    implementation "net.java.balloontip:balloontip:1.2.1"
+    implementation "commons-io:commons-io:2.1"
+    implementation "org.json:json:20090211"
+}
