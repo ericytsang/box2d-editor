@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+    api "com.badlogicgames.gdx:gdx-box2d:1.12.1"
 
     api project(':loader-libgdx:core')
 }
