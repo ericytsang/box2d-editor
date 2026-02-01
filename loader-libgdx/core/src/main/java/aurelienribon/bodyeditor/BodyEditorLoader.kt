@@ -1,5 +1,6 @@
 package aurelienribon.bodyeditor
 
+import aurelienribon.bodyeditor.BodyEditorLoader.XYModel
 import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.JsonReader
@@ -16,81 +17,83 @@ class BodyEditorLoader(
     private val lockForReusableStuff = Any()
     private val vectorPool = VectorPool()
 
-    fun accept(
+    fun <T> accept(
         name:String,
-        scale:Float,
-        visitor:ShapeVisitor,
-    ) = synchronized(lockForReusableStuff)
+        scale:XYModel,
+        visitor:ShapeVisitor<T>,
+    ):List<T> = synchronized(lockForReusableStuff)
     {
         val rbModel:RigidBodyModel = getRigidBody(name)
 
-        // TODO: Verify correct, updated method from mul to scl
-        val origin = rbModel.origin.cpy().scl(scale)
+        val origin = rbModel.origin.scl(scale)
 
-        rbModel.polygons.forEach { polygon ->
-            val vertices = polygon.vertices.map { vertex -> vertex.cpy().scl(scale).sub(origin) }
-            visitor.visitPolygon(vertices)
+        val polygonShapeIds = rbModel.polygons.map { polygon ->
+            val vertices = polygon.vertices.map { vertex -> vertex.scl(scale).sub(origin) }
+            val polygonShapeId = visitor.visitPolygon(vertices)
             vertices.forEach { vectorPool.free(it) }
+            polygonShapeId
         }
 
-        rbModel.circles.forEach { circle ->
-            val center = circle.center.cpy().scl(scale).sub(origin)
-            val radius = circle.radius*scale
-            visitor.visitCircle(center, radius)
+        val circleShapeIds = rbModel.circles.map { circle ->
+            val center = circle.center.scl(scale).sub(origin)
+
+            // I know you hate runtime exceptions, but this is a rare case, probably, because the GUI tool doesn't
+            // support adding circles, anyway. it only supports polygons.
+            require(scale.x == scale.y) {
+                "Circle scaling must be uniform (x and y must be equal), but was x=${scale.x}, y=${scale.y}"
+            }
+            val radius = circle.radius*scale.x
+            val circleShapeIds = visitor.visitCircle(center, radius)
             vectorPool.free(center)
+            circleShapeIds
         }
 
-        vectorPool.free(origin)
+        polygonShapeIds+circleShapeIds
     }
-
-    /**
-     * Gets the image path attached to the given name.
-     * Not a required field; could be null if user chose not to add an image.
-     */
-    fun getImagePath(name:String):String? = getRigidBody(name).imagePath
 
     /**
      * Gets the origin point attached to the given name. Since the point is
      * normalized in [0,1] coordinates, it needs to be scaled to your body
      * size.
      */
-    fun getOrigin(name:String,scale:Float):Vector2 = getRigidBody(name).origin.cpy().scl(scale)
+    fun getOrigin(name:String,scale:XYModel):Vector2 = getRigidBody(name).origin.scl(scale)
 
-    private fun XYModel.cpy():Vector2 = vectorPool.newVec().set(x,y)
+    private fun XYModel.scl(scale:XYModel) = vectorPool.newVec().also {
+        it.x = x*scale.x
+        it.y = y*scale.y
+    }
 
     private fun getRigidBody(name:String):RigidBodyModel =
         model.rigidBodies[name] ?: error("Name '$name' was not found.")
 
-    interface ShapeVisitor
+    interface ShapeVisitor<T>
     {
-        fun visitCircle(center:Vector2,radius:Float)
-        fun visitPolygon(vertices:List<Vector2>)
+        fun visitCircle(center:Vector2,radius:Float):T
+        fun visitPolygon(vertices:List<Vector2>):T
     }
 
     data class ProjectModel(
         val rigidBodies:Map<String,RigidBodyModel>,
     )
 
-    class RigidBodyModel(
+    data class RigidBodyModel(
         val name:String,
-
-        /** not a required field; user can choose not to add an image. */
         val imagePath:String?,
         val origin:XYModel,
         val polygons:List<PolygonModel>,
         val circles:List<CircleModel>,
     )
 
-    class PolygonModel(
+    data class PolygonModel(
         val vertices:List<XYModel>,
     )
 
-    class CircleModel(
+    data class CircleModel(
         val center:XYModel,
         val radius:Float,
     )
 
-    class XYModel(
+    data class XYModel(
         val x:Float,
         val y:Float,
     )
@@ -142,3 +145,5 @@ class BodyEditorLoader(
         private fun readXY(x:JsonValue,y:JsonValue):XYModel = XYModel(x.asFloat(),y.asFloat())
     }
 }
+
+fun xyModel(xy:Float) = XYModel(x = xy,y = xy)
