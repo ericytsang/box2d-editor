@@ -7,9 +7,9 @@ dependencies {
     implementation "com.badlogicgames.gdx:gdx-box2d-platform:1.12.1:natives-desktop"
     implementation "com.badlogicgames.gdx:gdx-platform:1.12.1:natives-desktop"
 
-    implementation project(":lib:box2d-editor:libs:tween-engine-api")
+    implementation project(":lib:tween-engine-api")
 
-    implementation project(':lib:box2d-editor:loader:box2d-v1.12.1')
+    implementation project(':loader-libgdx:box2d-v1.12.1')
 
 }
 

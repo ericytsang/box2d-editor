@@ -14,8 +14,8 @@ dependencies {
     implementation "commons-io:commons-io:2.1"
     implementation "org.json:json:20090211"
 
-    implementation project(":lib:box2d-editor:libs:css-engine-swing-api")
-    implementation project(":lib:box2d-editor:libs:tween-engine-api")
+    implementation project(":lib:css-engine-swing-api")
+    implementation project(":lib:tween-engine-api")
 
 }
 
