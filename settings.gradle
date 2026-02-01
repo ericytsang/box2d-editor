@@ -13,6 +13,8 @@ dependencyResolutionManagement {
 }
 
 include 'editor'
+include ':lib:css-engine-swing-api'
+include ':lib:tween-engine-api'
 include 'loader-libgdx:core'
 include 'loader-libgdx:box2d-v1.12.1'
 include 'loader-libgdx:box2d-v1.12.1-demo'

@@ -5,5 +5,5 @@ plugins {
 dependencies {
     api "com.badlogicgames.gdx:gdx-box2d:1.12.1"
 
-    api project(':loader-libgdx:core')
+    api project(':lib:box2d-editor:loader:core')
 }
